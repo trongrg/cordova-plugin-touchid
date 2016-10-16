@@ -13,12 +13,13 @@
 {
     NSString *text = [command.arguments objectAtIndex:0];
 
-    __block CDVPluginResult* pluginResult = nil;
+    [self.commandDelegate runInBackground:^{
+        __block CDVPluginResult* pluginResult = nil;
 
-    if (NSClassFromString(@"LAContext") != nil)
-    {
-        LAContext *laContext = [[LAContext alloc] init];
-        NSError *authError = nil;
+        if (NSClassFromString(@"LAContext") != nil)
+        {
+            LAContext *laContext = [[LAContext alloc] init];
+            NSError *authError = nil;
 
         if ([laContext canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&authError])
         {
@@ -61,47 +62,50 @@
                      pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:errorCode];
                  }
 
-                 [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-             }];
+                     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+                 }];
+            }
+            else
+            {
+                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[authError localizedDescription]];
+                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+            }
         }
         else
         {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[authError localizedDescription]];
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }
-    }
-    else
-    {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-    }
+    }];
 }
 
 - (void) checkSupport:(CDVInvokedUrlCommand*)command;
 {
 
-    __block CDVPluginResult* pluginResult = nil;
+    [self.commandDelegate runInBackground:^{
+        __block CDVPluginResult* pluginResult = nil;
 
-    if (NSClassFromString(@"LAContext") != nil)
-    {
-        LAContext *laContext = [[LAContext alloc] init];
-        NSError *authError = nil;
-
-        if ([laContext canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&authError])
+        if (NSClassFromString(@"LAContext") != nil)
         {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+            LAContext *laContext = [[LAContext alloc] init];
+            NSError *authError = nil;
+
+            if ([laContext canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&authError])
+            {
+                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+            }
+            else
+            {
+                pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[authError localizedDescription]];
+            }
         }
         else
         {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[authError localizedDescription]];
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
         }
-    }
-    else
-    {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-    }
 
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    }];
 }
 
 @end
