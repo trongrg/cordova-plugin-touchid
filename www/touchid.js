@@ -5,7 +5,7 @@ var TouchID = function () {
     this.name = "TouchID";
 };
 
-TouchID.prototype.authenticate = function (successCallback, errorCallback, text) {
+TouchID.prototype.authenticate = function (text, successCallback, errorCallback) {
     if (!text) {
         text = "Please authenticate via TouchID to proceed";
     }
